@@ -10,6 +10,7 @@ contract Deal is ParticipantFactory {
         bool[] requirementsFinish;
         uint8[] requirementsStatus;
         string[] requirementsList;
+        bool isFinished;
     }
     
     //statuses
@@ -27,19 +28,27 @@ contract Deal is ParticipantFactory {
         address Emitter,
         uint256 DealID,
         uint256 RequirementID,
-        bool NewStatus
+        bool NewStatus,
+        uint256 Timestamp
     );
     event CustomerChangedStatus(
         address Emitter,
         uint256 DealID,
         uint256 RequirementID,
-        uint8 NewStatus
+        uint8 NewStatus,
+        uint256 Timestamp
     );
     event ManagerChangedStatus(
         address Emitter,
         uint256 DealID,
         uint256 RequirementID,
-        uint8 NewStatus
+        uint8 NewStatus,
+        uint256 Timestamp
+    );
+    event ProjectFinished(
+        address Emitter,
+        uint256 DealID,
+        uint256 Timestamp
     );
     
     /**
@@ -49,6 +58,7 @@ contract Deal is ParticipantFactory {
      * @param _status false if unfinished and true if finished
      */ 
     function changeRequirementStatusForExecutor(uint256 _dealId, uint256 _requirementId, bool _status) public onlyExecutor {
+        require(!dealsList[_dealId].isFinished);
         require(dealsList[_dealId].executorAddress == msg.sender);
         require(_requirementId < dealsList[_dealId].requirementsList.length);
         
@@ -58,7 +68,8 @@ contract Deal is ParticipantFactory {
             msg.sender,
             _dealId,
             _requirementId,
-            _status
+            _status,
+            now
         );
     }
     
@@ -69,6 +80,7 @@ contract Deal is ParticipantFactory {
      * @param _status index of status of deal
      */ 
     function changeRequirementStatusForCustomer(uint256 _dealId, uint256 _requirementId, uint8 _status) public onlyCustomer {
+        require(!dealsList[_dealId].isFinished);
         require(dealsList[_dealId].customerAddress == msg.sender);
         require(_requirementId < dealsList[_dealId].requirementsList.length);
         require(_status == Pending ||
@@ -81,7 +93,8 @@ contract Deal is ParticipantFactory {
             msg.sender,
             _dealId,
             _requirementId,
-            _status
+            _status,
+            now
         );
     }
     
@@ -92,6 +105,7 @@ contract Deal is ParticipantFactory {
      * @param _status index of status of deal
      */ 
     function changeRequirementStatusForManager(uint256 _dealId, uint256 _requirementId, uint8 _status) public onlyManager {
+        require(!dealsList[_dealId].isFinished);
         require(_status == Pending ||
                 _status == Resolve ||
                 _status == Reject);
@@ -103,7 +117,22 @@ contract Deal is ParticipantFactory {
             msg.sender,
             _dealId,
             _requirementId,
-            _status
+            _status,
+            now
+        );
+    }
+    
+    function finishProject(uint256 _dealId) public {
+        require(!dealsList[_dealId].isFinished);
+        require(dealsList[_dealId].customerAddress == msg.sender ||
+                users[msg.sender] == Manager);
+                
+        dealsList[_dealId].isFinished = true;
+        
+        emit ProjectFinished(
+            msg.sender,
+            _dealId,
+            now
         );
     }
 }

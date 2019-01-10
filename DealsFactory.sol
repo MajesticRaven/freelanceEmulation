@@ -4,7 +4,7 @@ pragma experimental ABIEncoderV2;
 import "./Deal.sol";
 
 /**
- * @notice this contract need 3262690 gas for deployment. don't forget to increase gas
+ * @notice this contract need 3562228 gas for deployment. don't forget to increase gas
  */ 
 
 contract DealsFactory is Deal {
@@ -14,7 +14,7 @@ contract DealsFactory is Deal {
         string[] RequirementsList,
         uint256 IndexOfDeal
     );
-    
+
     /**
      * @notice each customer can create deal for smb
      * @param executorAddress address of executor
@@ -34,7 +34,8 @@ contract DealsFactory is Deal {
             executorAddress,
             requirementsFinish,
             requirementsStatus,
-            requirementsList
+            requirementsList,
+            false
         );
         
         dealsList[totalDeals] = details;
@@ -67,7 +68,8 @@ contract DealsFactory is Deal {
         address executorAddress,
         bool[] requirementsFinish,
         uint8[] requirementsStatus,
-        string[] requirementsList
+        string[] requirementsList,
+        bool isFinished
     ) {
         require(users[msg.sender] == Manager ||
                 dealsList[_dealId].customerAddress == msg.sender ||
@@ -78,8 +80,14 @@ contract DealsFactory is Deal {
         requirementsFinish = dealsList[_dealId].requirementsFinish;
         requirementsStatus = dealsList[_dealId].requirementsStatus;
         requirementsList = dealsList[_dealId].requirementsList;
-        
+        isFinished = dealsList[_dealId].isFinished;
     }
     
-
+    /**
+     * @notice get all active deals of yourself
+     * @return array of active deals
+     */ 
+    function getActiveDeals() public view returns (uint256[]) {
+        return activeDealsForUser[msg.sender];
+    }
 }
